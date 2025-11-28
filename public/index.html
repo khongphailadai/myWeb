@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Maze Game - Node.js</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Maze Game</h1>
+
+  <div class="controls">
+    <label>Thuật toán mê cung:</label>
+    <select id="algorithmSelect">
+      <option value="dfs">DFS</option>
+      <option value="prim">Prim</option>
+      <option value="kruskal">Kruskal</option>
+    </select>
+    <button id="newMazeBtn">Tạo mê cung mới</button>
+    <button id="showSolutions">Xem đáp án</button>
+    <select id="pathAlgo">
+      <option value="bfs">BFS</option>
+      <option value="dfs">DFS</option>
+      <option value="dijkstra">Dijkstra</option>
+    <div style="margin: 10px 0">
+    <label for="sizeSlider">Kích thước mê cung: </label>
+    <input type="range" id="sizeSlider" min="5" max="101" step="2" value="21">
+    <span id="sizeLabel">21 × 21</span>
+</div>
+</select>
+  </div>
+
+  <canvas id="mazeCanvas" width="450" height="450"></canvas>
+
+
+  <script src="script.js"></script>
+</body>
+</html>
