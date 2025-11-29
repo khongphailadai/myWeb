@@ -5,6 +5,10 @@ const newMazeBtn = document.getElementById('newMazeBtn');
 const showSolutions = document.getElementById('showSolutions');
 const slider = document.getElementById("sizeSlider");
 const sizeLabel = document.getElementById("sizeLabel");
+const visitDelaySlider = document.getElementById('visitDelaySlider');
+//const pathDelaySlider = document.getElementById('pathDelaySlider');
+//const visitDelayLabel = document.getElementById('visitDelayLabel');
+//const pathDelayLabel = document.getElementById('pathDelayLabel');
 
 slider.addEventListener("input", () => {
     sizeLabel.textContent = `${slider.value} × ${slider.value}`;
@@ -246,12 +250,36 @@ function generateNewMaze() {
 
 newMazeBtn.addEventListener('click', generateNewMaze);
 
+function drawCell(r,c){
+  ctx.fillStyle = '#1c6a25'; // visited color
+  ctx.fillRect(
+    c*cellSize, r*cellSize,
+    cellSize, cellSize
+  );
+
+}
+
+function drawVisited(x, y, color = 'rgba(28,106,37,0.9)') {
+  ctx.fillStyle = color;
+  ctx.fillRect(
+    x * cellSize + cellSize * 0.2,
+    y * cellSize + cellSize * 0.2,
+    cellSize * 0.6,
+    cellSize * 0.6
+  );
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 function bfs(start, end) {
   const [sx, sy] = start;
   const [ex, ey] = end;
   const queue = [[sx, sy]];
   const visited = Array.from({ length: rows }, () => Array(cols).fill(false));
   const prev = Array.from({ length: rows }, () => Array(cols).fill(null));
+  const visitedOrder = [];
   const dirs = [
     [1, 0],   
     [-1, 0], 
@@ -259,14 +287,15 @@ function bfs(start, end) {
     [0, -1]   
   ];
   visited[sy][sx] = true;
+  visitedOrder.push([sx, sy]);
   while (queue.length > 0) {
     const [x, y] = queue.shift();
     if (x === ex && y === ey) break;
-
+    
     for (const [dx, dy] of dirs) {
       const nx = x + dx;
       const ny = y + dy;
-
+      
       if (
         ny >= 0 && ny < rows &&
         nx >= 0 && nx < cols &&
@@ -274,6 +303,7 @@ function bfs(start, end) {
         !visited[ny][nx]
       ) {
         visited[ny][nx] = true;
+        visitedOrder.push([nx, ny]);
         prev[ny][nx] = [x, y];
         queue.push([nx, ny]);
       }
@@ -289,8 +319,9 @@ function bfs(start, end) {
   }
 
   if (path.length === 1 && (path[0][0] !== sx || path[0][1] !== sy)) return [];
-  return path;
+  return { visitedOrder, path };
 }
+
 
 function dfs(start, end) {
   const [sx, sy] = start;
@@ -299,6 +330,7 @@ function dfs(start, end) {
   const stack = [[sx, sy]];
   const visited = Array.from({ length: rows }, () => Array(cols).fill(false));
   const prev = Array.from({ length: rows }, () => Array(cols).fill(null));
+  const visitedOrder = [];
 
   const dirs = [
     [1, 0], [-1, 0],
@@ -306,6 +338,8 @@ function dfs(start, end) {
   ];
 
   visited[sy][sx] = true;
+  visitedOrder.push([sx, sy]);
+
 
   while (stack.length > 0) {
     const [x, y] = stack.pop();
@@ -323,6 +357,7 @@ function dfs(start, end) {
         !visited[ny][nx]
       ) {
         visited[ny][nx] = true;
+        visitedOrder.push([nx, ny]);
         prev[ny][nx] = [x, y];
         stack.push([nx, ny]);
       }
@@ -337,7 +372,7 @@ function dfs(start, end) {
   }
 
   if (path.length === 1 && (path[0][0] !== sx || path[0][1] !== sy)) return [];
-  return path;
+  return { visitedOrder, path };
 }
 
 
@@ -348,6 +383,7 @@ function dijkstra(start, end) {
   const dist = Array.from({ length: rows }, () => Array(cols).fill(Infinity));
   const prev = Array.from({ length: rows }, () => Array(cols).fill(null));
   const visited = Array.from({ length: rows }, () => Array(cols).fill(false));
+  const visitedOrder = [];
 
   const dirs = [
     [1, 0], [-1, 0],
@@ -355,6 +391,7 @@ function dijkstra(start, end) {
   ];
 
   dist[sy][sx] = 0;
+  visitedOrder.push([sx, sy]);
   const pq = [[sx, sy, 0]];
 
   while (pq.length > 0) {
@@ -365,6 +402,7 @@ function dijkstra(start, end) {
     visited[y][x] = true;
 
     if (x === ex && y === ey) break;
+    visitedOrder.push([x, y]);
 
     for (const [dx, dy] of dirs) {
       const nx = x + dx;
@@ -393,7 +431,7 @@ function dijkstra(start, end) {
   }
 
   if (path.length === 1 && (path[0][0] !== sx || path[0][1] !== sy)) return [];
-  return path;
+  return { visitedOrder, path };
 }
 
 
@@ -404,8 +442,8 @@ function drawPath(path) {
 
   for (const [x, y] of path) {
     ctx.fillRect(
-      x * cellSize + cellSize / 5, 
-      y * cellSize + cellSize /5,
+      x * cellSize  + cellSize /5, 
+      y * cellSize  + cellSize /5,
       cellSize /5,
       cellSize /5
     );
@@ -413,25 +451,45 @@ function drawPath(path) {
   
 }
 
+async function animatePathfinding(result, options = {}) {
+  const { visitedOrder, path } = result;
+  const visitDelay = options.visitDelay ?? 8; 
+  const pathDelay = options.pathDelay ?? 25; 
+
+  drawMaze();
+  drawGoal();
+  drawPlayer();
+
+  for (const [x, y] of visitedOrder) {
+    drawVisited(x, y, 'rgba(28,106,37,0.75)');
+    await sleep(visitDelay);
+  }
+
+  if (path && path.length) {
+    for (const [x, y] of path) {
+      drawVisited(x, y, 'rgba(0,255,255,0.95)'); 
+      await sleep(pathDelay);
+    }
+  }
+}
+ 
 function showSolution() {
   const algo = document.getElementById("pathAlgo").value;
-  let path;
-
-  if (algo === "bfs") path = bfs([player.x, player.y], [goal.x, goal.y]);
-  else if (algo === "dfs") path = dfs([player.x, player.y], [goal.x, goal.y]);
-  else if (algo == "dijkstra") path = dijkstra([player.x, player.y], [goal.x, goal.y]);
-
-  if (!path || path.length === 0) {
+  let result;
+ 
+  if (algo === "bfs") result = bfs([player.x, player.y], [goal.x, goal.y]);
+  else if (algo === "dfs") result = dfs([player.x, player.y], [goal.x, goal.y]);
+  else if (algo == "dijkstra") result = dijkstra([player.x, player.y], [goal.x, goal.y]);
+ 
+  if (!result || !result.path || result.path.length === 0) {
     alert("Không tìm thấy đường đi");
     return;
   }
 
-  drawMaze();
-  drawPath(path);
+  const options = {
+    visitDelay: Number(visitDelaySlider?.value ?? 8),
+    pathDelay: Number(25)
+  };
+  animatePathfinding(result, options);
 }
-//hiện đang gặp lỗi không thể vẽ ra đường đi
-
-showSolutions.addEventListener('click', showSolution);
-
-
-//generateNewMaze();
+showSolutions.addEventListener("click", showSolution);
