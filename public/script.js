@@ -250,15 +250,6 @@ function generateNewMaze() {
 
 newMazeBtn.addEventListener('click', generateNewMaze);
 
-function drawCell(r,c){
-  ctx.fillStyle = '#1c6a25'; // visited color
-  ctx.fillRect(
-    c*cellSize, r*cellSize,
-    cellSize, cellSize
-  );
-
-}
-
 function drawVisited(x, y, color = 'rgba(28,106,37,0.9)') {
   ctx.fillStyle = color;
   ctx.fillRect(
