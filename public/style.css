@@ -1,12 +1,38 @@
+
+
 body {
-  text-align: center;
   font-family: Arial, sans-serif;
   background-color: #121212;
   color: #fff;
 }
 
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 98vh;
+}
+
+.header {
+  height: 60px;
+  border-bottom: 3px solid black;
+  display: flex;
+  align-items: center;
+  padding-left: 20px;
+  font-weight: bold;
+}
+
+.main {
+  flex: 1;
+  display: flex;
+}
+
 .controls {
-  margin: 10px;
+  flex: 1;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: stretch;
 }
 
 canvas {
@@ -15,17 +41,92 @@ canvas {
   margin-top: 10px;
 }
 
-button, select {
-  margin: 5px;
-  padding: 5px 10px;
-  font-size: 15px;
-  border-radius: 8px;
+.mazeArea {
+  flex: 3;
+  border-right: 3px solid black;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#mazeCanvas {
+  background: black;
+  width: 500px;
+  height: 500px;
+  display: block;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.control-group label {
+  font-weight: bold;
+  font-size: 14px;
+  color: #ddd;
+}
+
+.control-group select, .control-group button, .control-group input[type="range"] {
+  padding: 10px;
+  font-size: 16px;
+  border-radius: 6px;
+  border: 1px solid #555;
+  background-color: #333;
+  color: #fff;
+  transition: all 0.3s ease;
+}
+
+.control-group select:focus, .control-group button:focus, .control-group input[type="range"]:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+.control-group button {
+  background-color: #007bff;
   border: none;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.control-group button:hover {
+  background-color: #0056b3;
+  transform: translateY(-2px);
+}
+
+.control-group input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: #555;
+  height: 6px;
+  border-radius: 3px;
+}
+
+.control-group input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #007bff;
   cursor: pointer;
 }
 
-button:hover {
-  background-color: #444;
+.control-group input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #007bff;
+  cursor: pointer;
+  border: none;
+}
+
+#sizeLabel {
+  font-size: 14px;
+  color: #ccc;
+  margin-left: 10px;
 }
 
 

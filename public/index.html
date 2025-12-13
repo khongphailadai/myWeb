@@ -6,46 +6,57 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Maze Game</h1>
-
-  <div class="controls">
-    <label>Thuật toán mê cung:</label>
-    <select id="algorithmSelect">
-      <option value="dfs">DFS</option>
-      <option value="prim">Prim</option>
-      <option value="kruskal">Kruskal</option>
-    </select>
-    <button id="newMazeBtn">Tạo mê cung mới</button>
-    <button id="showSolutions">Xem đáp án</button>
-    <select id="pathAlgo">
-      <option value="bfs">BFS</option>
-      <option value="dfs">DFS</option>
-      <option value="dijkstra">Dijkstra</option>
-    <div style="margin: 10px 0">
-    <label for="sizeSlider">Kích thước mê cung: </label>
-    <input type="range" id="sizeSlider" min="5" max="101" step="2" value="21">
-    <span id="sizeLabel">21 × 21</span>
-    
-    
-</div>
-</select>
+  <div class="app">
+  <header class="header">
+      <h1>MAZE GAME 101</h1>
+  </header>
+  <div class="main">
+  <div class="mazeArea">
+    <canvas id="mazeCanvas" width="450" height="450"></canvas>
   </div>
-
   <div class="controls">
-    <label>------------------------ Visit animation (ms):
+    <div class="control-group">
+      <label for="algorithmSelect">Thuật toán mê cung:</label>
+      <select id="algorithmSelect">
+        <option value="dfs">DFS</option>
+        <option value="prim">Prim</option>
+        <option value="kruskal">Kruskal</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <button id="newMazeBtn">Tạo mê cung mới</button>
+      <button id="showSolutions">Xem đáp án</button>
+    </div>
+    <div class="control-group">
+      <label for="pathAlgo">Thuật toán đường đi:</label>
+      <select id="pathAlgo">
+        <option value="bfs">BFS</option>
+        <option value="dfs">DFS</option>
+        <option value="dijkstra">Dijkstra</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label for="sizeSlider">Kích thước mê cung:</label>
+      <input type="range" id="sizeSlider" min="5" max="29" step="2" value="21">
+      <span id="sizeLabel">21 × 21</span>
+    </div>
+    <div class="control-group">
+      <label for="visitDelaySlider">Tốc độ animation (ms):</label>
       <input id="visitDelaySlider" type="range" min="0" max="100" value="8">
-    </label>
-    <label>--------------------------</label>
+    </div>
   </div>
-  <canvas id="mazeCanvas" width="450" height="450"></canvas>
+
+
+  
 
   <div id="goalOverlay" class="overlay hidden">
   <div class="overlay-content">
     <h2>Goal Reached!</h2>
     <button id="playAgainBtn">Play Again</button>
   </div>
+ </div>
 </div>
-
+</div>
   <script src="script.js"></script>
 </body>
 </html>
