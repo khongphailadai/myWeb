@@ -324,8 +324,8 @@ async function animateMazeGeneration(visitedOrder, options = {}) {
 
   //drawMaze();
   drawBlankMaze();
-  drawGoal();
-  drawPlayer();
+  //drawGoal();
+  //drawPlayer();
 
   for (const [x, y] of visitedOrder) {
     if (signal.aborted) return;
