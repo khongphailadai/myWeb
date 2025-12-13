@@ -299,7 +299,7 @@ function generateMazeKruskal() {
   for (const w of walls) {
     if (findSet(w.a.x, w.a.y) !== findSet(w.b.x, w.b.y)) {
       maze[w.y][w.x] = 0;
-      visitedOrder.push([w.x, w.y]); // wall removed
+      visitedOrder.push([w.x, w.y]); 
       unionSet(w.a, w.b);
     }
   }
@@ -315,7 +315,7 @@ function drawBlankMaze() {
 }
 
 async function animateMazeGeneration(visitedOrder, options = {}) {
-  // cancel any running animation
+  
   if (animationAbortController) animationAbortController.abort();
   animationAbortController = new AbortController();
   const signal = animationAbortController.signal;
@@ -324,18 +324,16 @@ async function animateMazeGeneration(visitedOrder, options = {}) {
 
   //drawMaze();
   drawBlankMaze();
-  drawGoal();
-  drawPlayer();
+  //drawGoal();
+  //drawPlayer();
 
   for (const [x, y] of visitedOrder) {
     if (signal.aborted) return;
-    // draw carved cell immediately (full cell color)
-    ctx.fillStyle = '#000'; // carved cell color matches drawMaze's open color
+    ctx.fillStyle = '#000'; 
     ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
     await sleep(visitDelaySlider?.value ?? genDelay);
   }
 
-  // final clean draw
   drawAll();
 }
 
@@ -418,7 +416,7 @@ document.addEventListener('keydown', e => {
 });
 
 async function generateNewMaze() {
-  // cancel any running animation
+  
   if (animationAbortController) {
     animationAbortController.abort();
   }
