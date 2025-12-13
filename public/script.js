@@ -48,7 +48,7 @@ let goal = { x: cols - 1, y: rows - 1 };
 function initializeMaze() {
   maze = Array.from({ length: rows }, () => Array(cols).fill(1));
 }
-
+/*
 function generateMazeDFS() {
   initializeMaze();
   const stack = [];
@@ -88,7 +88,58 @@ function generateMazeDFS() {
   }
   maze[goal.y][goal.x] = 0;
 }
+*/
 
+function generateMazeDFS() {
+  initializeMaze();
+  const stack = [];
+  const visited = new Set();
+  const visitedOrder = [];
+  const start = { x: 0, y: 0 };
+  maze[start.y][start.x] = 0;
+  visitedOrder.push([start.x, start.y]);
+  stack.push(start);
+  visited.add('0,0');
+
+  const directions = [
+    { dx: 0, dy: -1 },
+    { dx: 1, dy: 0 },
+    { dx: 0, dy: 1 },
+    { dx: -1, dy: 0 },
+  ];
+
+  while (stack.length) {
+    const current = stack[stack.length - 1];
+    const neighbors = directions
+      .map(d => ({ x: current.x + d.dx * 2, y: current.y + d.dy * 2, dir: d }))
+      .filter(n =>
+        n.x >= 0 &&
+        n.x < cols &&
+        n.y >= 0 &&
+        n.y < rows &&
+        !visited.has(`${n.x},${n.y}`)
+      );
+
+    if (!neighbors.length) stack.pop();
+    else {
+      const next = neighbors[Math.floor(Math.random() * neighbors.length)];
+      // remove wall between current and next
+      const wx = current.x + next.dir.dx;
+      const wy = current.y + next.dir.dy;
+      maze[wy][wx] = 0;
+      visitedOrder.push([wx, wy]);
+      // carve next cell
+      maze[next.y][next.x] = 0;
+      visitedOrder.push([next.x, next.y]);
+      visited.add(`${next.x},${next.y}`);
+      stack.push(next);
+    }
+  }
+  maze[goal.y][goal.x] = 0;
+  visitedOrder.push([goal.x, goal.y]);
+  return visitedOrder;
+}
+/*
 function generateMazePrim() {
   initializeMaze();
 
@@ -125,8 +176,8 @@ function generateMazePrim() {
   }
   maze[goal.y][goal.x] = 0;
 }
-
-
+*/
+/*
 
 function generateMazeKruskal() {
   initializeMaze();
@@ -168,6 +219,125 @@ function generateMazeKruskal() {
 
   maze[goal.y][goal.x] = 0;
 }
+*/
+
+function generateMazePrim() {
+  initializeMaze();
+  const walls = [];
+  const visitedOrder = [];
+  function markCell(x, y) {
+    if (maze[y][x] === 0) return;
+    maze[y][x] = 0;
+    visitedOrder.push([x, y]);
+    const directions = [
+      [x + 2, y, x + 1, y],
+      [x - 2, y, x - 1, y],
+      [x, y + 2, x, y + 1],
+      [x, y - 2, x, y - 1],
+    ];
+
+    for (const [nx, ny, wx, wy] of directions) {
+      if (
+        nx >= 0 &&
+        nx < cols &&
+        ny >= 0 &&
+        ny < rows &&
+        maze[ny][nx] === 1
+      ) {
+        walls.push([nx, ny, wx, wy]);
+      }
+    }
+  }
+  markCell(0, 0);
+  while (walls.length > 0) {
+    const index = Math.floor(Math.random() * walls.length);
+    const [nx, ny, wx, wy] = walls.splice(index, 1)[0];
+    if (maze[ny][nx] === 1) {
+      maze[wy][wx] = 0;
+      visitedOrder.push([wx, wy]); // wall removed
+      markCell(nx, ny);
+    }
+  }
+  maze[goal.y][goal.x] = 0;
+  visitedOrder.push([goal.x, goal.y]);
+  return visitedOrder;
+}
+
+function generateMazeKruskal() {
+  initializeMaze();
+  const cells = [];
+  const sets = {};
+  let setId = 0;
+  const visitedOrder = [];
+
+  for (let y = 0; y < rows; y += 2) {
+    for (let x = 0; x < cols; x += 2) {
+      cells.push({ x, y });
+      sets[`${x},${y}`] = setId++;
+      maze[y][x] = 0;
+      visitedOrder.push([x, y]);
+    }
+  }
+
+  const walls = [];
+  for (const c of cells) {
+    if (c.x + 2 < cols) walls.push({ x: c.x + 1, y: c.y, a: c, b: { x: c.x + 2, y: c.y } });
+    if (c.y + 2 < rows) walls.push({ x: c.x, y: c.y + 1, a: c, b: { x: c.x, y: c.y + 2 } });
+  }
+
+  walls.sort(() => Math.random() - 0.5);
+
+  const findSet = (x, y) => sets[`${x},${y}`];
+  const unionSet = (a, b) => {
+    const oldSet = sets[`${b.x},${b.y}`];
+    const newSet = sets[`${a.x},${a.y}`];
+    for (const key in sets) {
+      if (sets[key] === oldSet) sets[key] = newSet;
+    }
+  };
+
+  for (const w of walls) {
+    if (findSet(w.a.x, w.a.y) !== findSet(w.b.x, w.b.y)) {
+      maze[w.y][w.x] = 0;
+      visitedOrder.push([w.x, w.y]); // wall removed
+      unionSet(w.a, w.b);
+    }
+  }
+
+  maze[goal.y][goal.x] = 0;
+  visitedOrder.push([goal.x, goal.y]);
+  return visitedOrder;
+}
+
+function drawBlankMaze() {
+  ctx.fillStyle = '#333'; 
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+
+async function animateMazeGeneration(visitedOrder, options = {}) {
+  // cancel any running animation
+  if (animationAbortController) animationAbortController.abort();
+  animationAbortController = new AbortController();
+  const signal = animationAbortController.signal;
+  const genDelay = options.genDelay ?? Number(visitDelaySlider?.value ?? 5);
+
+
+  //drawMaze();
+  drawBlankMaze();
+  drawGoal();
+  drawPlayer();
+
+  for (const [x, y] of visitedOrder) {
+    if (signal.aborted) return;
+    // draw carved cell immediately (full cell color)
+    ctx.fillStyle = '#000'; // carved cell color matches drawMaze's open color
+    ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+    await sleep(visitDelaySlider?.value ?? genDelay);
+  }
+
+  // final clean draw
+  drawAll();
+}
 
 function drawMaze() {
   for (let y = 0; y < rows; y++) {
@@ -207,7 +377,19 @@ function drawAll() {
   drawPlayer();
 }
 
+const goalOverlay = document.getElementById('goalOverlay');
+const playAgainBtn = document.getElementById('playAgainBtn');
+
+playAgainBtn.addEventListener('click', () => {
+  goalOverlay.classList.add('hidden');
+  generateNewMaze();
+});
+
 function movePlayer(dx, dy) {
+  if (animationAbortController) {
+    animationAbortController.abort();
+  }
+
   const newX = player.x + dx;
   const newY = player.y + dy;
   if (
@@ -219,9 +401,10 @@ function movePlayer(dx, dy) {
   ) {
     player.x = newX;
     player.y = newY;
+    
     if (player.x === goal.x && player.y === goal.y) {
-      setTimeout(() => alert('Chiến thắng'), 100);
-      generateNewMaze();
+      goalOverlay.classList.remove('hidden');
+      return;
     }
   }
   drawAll();
@@ -234,17 +417,27 @@ document.addEventListener('keydown', e => {
   if (e.key === 'l') movePlayer(1, 0);
 });
 
-function generateNewMaze() {
+async function generateNewMaze() {
+  // cancel any running animation
+  if (animationAbortController) {
+    animationAbortController.abort();
+  }
+
   const algorithm = algorithmSelect.value;
-  if (algorithm === 'dfs') generateMazeDFS();
-  else if (algorithm === 'prim') generateMazePrim();
-  else generateMazeKruskal();
+  let visitedOrder = [];
+  if (algorithm === 'dfs') visitedOrder = generateMazeDFS();
+  else if (algorithm === 'prim') visitedOrder = generateMazePrim();
+  else visitedOrder = generateMazeKruskal();
 
   player = { x: 0, y: 0 };
   goal = { x: cols - 1, y: rows - 1 };
-  drawAll();
+
+  const options = { genDelay: Number(visitDelaySlider?.value ?? 8) };
+  await animateMazeGeneration(visitedOrder, options);
+
   console.log(rows, cols, maze.length, maze[0].length);
 }
+
 
 
 
@@ -442,28 +635,35 @@ function drawPath(path) {
   
 }
 
+let animationAbortController = null;
+
 async function animatePathfinding(result, options = {}) {
+  animationAbortController = new AbortController();
+  const signal = animationAbortController.signal;
+  
   const { visitedOrder, path } = result;
-  const visitDelay = options.visitDelay ?? 8; 
-  const pathDelay = options.pathDelay ?? 25; 
+  const visitDelay = options.visitDelay ?? 8;
+  const pathDelay = options.pathDelay ?? 25;
 
   drawMaze();
   drawGoal();
   drawPlayer();
 
   for (const [x, y] of visitedOrder) {
+    if (signal.aborted) return; 
     drawVisited(x, y, 'rgba(28,106,37,0.75)');
     await sleep(visitDelay);
   }
 
   if (path && path.length) {
     for (const [x, y] of path) {
-      drawVisited(x, y, 'rgba(0,255,255,0.95)'); 
+      if (signal.aborted) return; 
+      drawVisited(x, y, 'rgba(0,255,255,0.95)');
       await sleep(pathDelay);
     }
   }
 }
- 
+
 function showSolution() {
   const algo = document.getElementById("pathAlgo").value;
   let result;
