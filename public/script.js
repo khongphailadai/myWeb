@@ -6,6 +6,7 @@ const showSolutions = document.getElementById('showSolutions');
 const slider = document.getElementById("sizeSlider");
 const sizeLabel = document.getElementById("sizeLabel");
 const visitDelaySlider = document.getElementById('visitDelaySlider');
+const themeToggle = document.getElementById('themeToggle');
 //const pathDelaySlider = document.getElementById('pathDelaySlider');
 //const visitDelayLabel = document.getElementById('visitDelayLabel');
 //const pathDelayLabel = document.getElementById('pathDelayLabel');
@@ -35,6 +36,24 @@ slider.addEventListener("change", () => {
     goal = { x: cols - 1, y: rows - 1 };
     
 });
+
+themeToggle.addEventListener('click', () => {
+    document.body.classList.toggle('light-mode');
+    themeToggle.textContent = document.body.classList.contains('light-mode') ? '☀️' : '🌙';
+    drawAll(); 
+});
+
+function getThemeColors() {
+    const isLight = document.body.classList.contains('light-mode');
+    return {
+        wall: isLight ? '#000' : '#333',
+        path: isLight ? '#fff' : '#000',
+        player: isLight ? '#0734fcff' : 'yellow',
+        goal: isLight ? '#fb00ffff' : 'lime',
+        visited: 'rgba(28,106,37,0.9)',
+        solution: isLight ? 'rgba(255, 119, 0, 1)' : 'rgba(0,255,255,0.95)'
+    };
+}
 
 
 //canvas.width = cols * cellSize;
@@ -310,7 +329,8 @@ function generateMazeKruskal() {
 }
 
 function drawBlankMaze() {
-  ctx.fillStyle = '#333'; 
+  const colors = getThemeColors();
+  ctx.fillStyle = colors.wall; 
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 
@@ -329,7 +349,8 @@ async function animateMazeGeneration(visitedOrder, options = {}) {
 
   for (const [x, y] of visitedOrder) {
     if (signal.aborted) return;
-    ctx.fillStyle = '#000'; 
+    const colors = getThemeColors();
+    ctx.fillStyle = colors.path; 
     ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
     await sleep(visitDelaySlider?.value ?? genDelay);
   }
@@ -338,16 +359,18 @@ async function animateMazeGeneration(visitedOrder, options = {}) {
 }
 
 function drawMaze() {
+  const colors = getThemeColors();
   for (let y = 0; y < rows; y++) {
     for (let x = 0; x < cols; x++) {
-      ctx.fillStyle = maze[y][x] === 1 ? '#333' : '#000';
+      ctx.fillStyle = maze[y][x] === 1 ? colors.wall : colors.path;
       ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
     }
   }
 }
 
 function drawPlayer() {
-  ctx.fillStyle = 'yellow';
+  const colors = getThemeColors();
+  ctx.fillStyle = colors.player;
   ctx.beginPath();
   ctx.arc(
     player.x * cellSize + cellSize / 2,
@@ -360,7 +383,8 @@ function drawPlayer() {
 }
 
 function drawGoal() {
-  ctx.fillStyle = 'lime';
+  const colors = getThemeColors();
+  ctx.fillStyle = colors.goal;
   ctx.fillRect(
     goal.x * cellSize + cellSize / 4,
     goal.y * cellSize + cellSize / 4,
@@ -441,7 +465,11 @@ async function generateNewMaze() {
 
 newMazeBtn.addEventListener('click', generateNewMaze);
 
-function drawVisited(x, y, color = 'rgba(28,106,37,0.9)') {
+function drawVisited(x, y, color) {
+  if (!color) {
+    const colors = getThemeColors();
+    color = colors.visited;
+  }
   ctx.fillStyle = color;
   ctx.fillRect(
     x * cellSize + cellSize * 0.2,
@@ -649,14 +677,16 @@ async function animatePathfinding(result, options = {}) {
 
   for (const [x, y] of visitedOrder) {
     if (signal.aborted) return; 
-    drawVisited(x, y, 'rgba(28,106,37,0.75)');
+    const colors = getThemeColors();
+    drawVisited(x, y, colors.visited.replace('0.9', '0.75'));
     await sleep(visitDelay);
   }
 
   if (path && path.length) {
+    const colors = getThemeColors();
     for (const [x, y] of path) {
       if (signal.aborted) return; 
-      drawVisited(x, y, 'rgba(0,255,255,0.95)');
+      drawVisited(x, y, colors.solution);
       await sleep(pathDelay);
     }
   }
