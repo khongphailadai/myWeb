@@ -145,12 +145,10 @@ function generateMazeDFS() {
     if (!neighbors.length) stack.pop();
     else {
       const next = neighbors[Math.floor(Math.random() * neighbors.length)];
-      // remove wall between current and next
       const wx = current.x + next.dir.dx;
       const wy = current.y + next.dir.dy;
       maze[wy][wx] = 0;
       visitedOrder.push([wx, wy]);
-      // carve next cell
       maze[next.y][next.x] = 0;
       visitedOrder.push([next.x, next.y]);
       visited.add(`${next.x},${next.y}`);
@@ -372,7 +370,7 @@ function drawMaze() {
 }
 
 function movePlayer(dx, dy) {
-  if (isAnimating) return; // Prevent new moves if already animating
+  if (isAnimating) return;
 
   const newX = player.x + dx;
   const newY = player.y + dy;
@@ -383,7 +381,6 @@ function movePlayer(dx, dy) {
     newY < rows &&
     maze[newY][newX] === 0
   ) {
-    // Set target position
     player.targetX = newX * cellSize + cellSize / 2;
     player.targetY = newY * cellSize + cellSize / 2;
     player.x = newX;
@@ -409,8 +406,6 @@ function animatePlayerMove() {
     }
     return;
   }
-
-  // Interpolate position
   player.currentX += dx * speed;
   player.currentY += dy * speed;
 
