@@ -372,6 +372,8 @@ function drawMaze() {
 function movePlayer(dx, dy) {
   if (isAnimating) return;
 
+  
+
   const newX = player.x + dx;
   const newY = player.y + dy;
   if (
@@ -381,6 +383,8 @@ function movePlayer(dx, dy) {
     newY < rows &&
     maze[newY][newX] === 0
   ) {
+    if (animationAbortController) animationAbortController.abort();
+
     player.targetX = newX * cellSize + cellSize / 2;
     player.targetY = newY * cellSize + cellSize / 2;
     player.x = newX;
@@ -713,6 +717,8 @@ async function animatePathfinding(result, options = {}) {
 }
 
 function showSolution() {
+  if (animationAbortController) animationAbortController.abort();
+
   const algo = document.getElementById("pathAlgo").value;
   let result;
  
