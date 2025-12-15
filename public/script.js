@@ -26,6 +26,7 @@ let isAnimating = false; // Flag to prevent moves during animation
 let goal = { x: cols - 1, y: rows - 1 };
 
 slider.addEventListener("change", () => {
+    if (animationAbortController) animationAbortController.abort();
     const newSize = parseInt(slider.value);
 
     rows = newSize;
