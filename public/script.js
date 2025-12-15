@@ -19,7 +19,10 @@ let rows = 15;
 let cols = 15;
 let cellSize = 30;
 
-let player = { x: 0, y: 0 };
+// Update player object to include current and target positions for animation
+let player = { x: 0, y: 0, currentX: cellSize / 2, currentY: cellSize / 2, targetX: cellSize / 2, targetY: cellSize / 2 };
+let isAnimating = false; // Flag to prevent moves during animation
+
 let goal = { x: cols - 1, y: rows - 1 };
 
 slider.addEventListener("change", () => {
@@ -32,7 +35,7 @@ slider.addEventListener("change", () => {
     canvas.width = cols * cellSize;
     canvas.height = rows * cellSize;
 
-    player = { x: 0, y: 0 };
+    player = { x: 0, y: 0, currentX: cellSize / 2, currentY: cellSize / 2, targetX: cellSize / 2, targetY: cellSize / 2 };
     goal = { x: cols - 1, y: rows - 1 };
     
 });
@@ -368,13 +371,60 @@ function drawMaze() {
   }
 }
 
+function movePlayer(dx, dy) {
+  if (isAnimating) return; // Prevent new moves if already animating
+
+  const newX = player.x + dx;
+  const newY = player.y + dy;
+  if (
+    newX >= 0 &&
+    newX < cols &&
+    newY >= 0 &&
+    newY < rows &&
+    maze[newY][newX] === 0
+  ) {
+    // Set target position
+    player.targetX = newX * cellSize + cellSize / 2;
+    player.targetY = newY * cellSize + cellSize / 2;
+    player.x = newX;
+    player.y = newY;
+    isAnimating = true;
+    animatePlayerMove();
+  }
+}
+
+function animatePlayerMove() {
+  const speed = 0.2; 
+  const dx = player.targetX - player.currentX;
+  const dy = player.targetY - player.currentY;
+  const distance = Math.sqrt(dx * dx + dy * dy);
+
+  if (distance < 1) { 
+    player.currentX = player.targetX;
+    player.currentY = player.targetY;
+    isAnimating = false;
+    drawAll();
+    if (player.x === goal.x && player.y === goal.y) {
+      goalOverlay.classList.remove('hidden');
+    }
+    return;
+  }
+
+  // Interpolate position
+  player.currentX += dx * speed;
+  player.currentY += dy * speed;
+
+  drawAll();
+  requestAnimationFrame(animatePlayerMove);
+}
+
 function drawPlayer() {
   const colors = getThemeColors();
   ctx.fillStyle = colors.player;
   ctx.beginPath();
   ctx.arc(
-    player.x * cellSize + cellSize / 2,
-    player.y * cellSize + cellSize / 2,
+    player.currentX,
+    player.currentY,
     cellSize / 4,
     0,
     Math.PI * 2
@@ -407,31 +457,6 @@ playAgainBtn.addEventListener('click', () => {
   generateNewMaze();
 });
 
-function movePlayer(dx, dy) {
-  if (animationAbortController) {
-    animationAbortController.abort();
-  }
-
-  const newX = player.x + dx;
-  const newY = player.y + dy;
-  if (
-    newX >= 0 &&
-    newX < cols &&
-    newY >= 0 &&
-    newY < rows &&
-    maze[newY][newX] === 0
-  ) {
-    player.x = newX;
-    player.y = newY;
-    
-    if (player.x === goal.x && player.y === goal.y) {
-      goalOverlay.classList.remove('hidden');
-      return;
-    }
-  }
-  drawAll();
-}
-
 document.addEventListener('keydown', e => {
   if (e.key === 'i') movePlayer(0, -1);
   if (e.key === 'k') movePlayer(0, 1);
@@ -451,7 +476,7 @@ async function generateNewMaze() {
   else if (algorithm === 'prim') visitedOrder = generateMazePrim();
   else visitedOrder = generateMazeKruskal();
 
-  player = { x: 0, y: 0 };
+  player = { x: 0, y: 0, currentX: cellSize / 2, currentY: cellSize / 2, targetX: cellSize / 2, targetY: cellSize / 2 };
   goal = { x: cols - 1, y: rows - 1 };
 
   const options = { genDelay: Number(visitDelaySlider?.value ?? 8) };
